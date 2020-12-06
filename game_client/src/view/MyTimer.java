@@ -1,0 +1,40 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package view;
+
+/**
+ *
+ * @author tungakanui
+ */
+public class MyTimer implements java.lang.Runnable{
+    int i;
+
+    public MyTimer() {
+    }
+
+    public MyTimer(int i) {
+        this.i = i;
+    }
+
+    @Override
+    public void run() {
+        this.runTimer(i);
+    }
+
+    public void runTimer(int i){
+         while (i>0){
+          System.out.println("Remaining: "+i+" seconds");
+          try {
+            i--;
+            Thread.sleep(1000L);    // 1000L = 1000ms = 1 second
+           }
+           catch (InterruptedException e) {
+               //I don't think you need to do anything for your particular problem
+           }
+         }
+    }
+
+}
