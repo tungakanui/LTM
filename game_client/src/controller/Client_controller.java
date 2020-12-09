@@ -65,7 +65,7 @@ public class Client_controller  extends Thread{
                     case "reg"               : this.respon_reg(respon);break;
                     case "onwin"             : this.enemyLose(respon);break;
                     case "onlosechallenge"   : this.enemyLoseAndChallenge(respon);break;
-//                    case "onPause": this.onPause(); break;
+                    case "onPause"           : this.onPause(respon); break;
 //                    case "multiChallenge": this.multiChallenge();break;
                     default                  : System.out.println("unknow action");
                 }
@@ -175,20 +175,8 @@ public class Client_controller  extends Thread{
     }
     
     public void onPause(Data_socket dtsk){
-        main.done = false;
-        dtsk.action = "onPause";
-        String[] data = new String[3];
-        data[0] = main.my_ID + "";
-        data[1] = "";
-        data[2] = main.full_name;
-        
-        dtsk.data = data;
-        try {
-            ObjectOutputStream dout = new ObjectOutputStream(main.socket.getOutputStream());
-            dout.writeObject(dtsk);
-            dout.flush();
-        } catch (Exception e){
-            e.printStackTrace();
+        if (dtsk.action.equals("onPause")){
+            main.test.IS_PAUSING = true;
         }
     }
     

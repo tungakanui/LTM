@@ -316,21 +316,34 @@ public class Test extends javax.swing.JDialog implements Runnable {
     public void run() {
         try {
             while (IS_RUN) {
-                tics++;
-                if (tics == 100) {
-                    secs += 1;
-                    tics = 0;
+                if (timePause == 0) {
+                    jButton2.setText("Pause");
+                    CAN_PAUSE = false;
+                    jButton2.setEnabled(false);
                 }
-                if (secs == 60) {
-                    mins += 1;
-                    secs = 0;
+                while (timePause > 0 && IS_PAUSING){
+                    Thread.sleep(1000);
+                    if (IS_PAUSING == false) break;
+                    timePause--;
+                    jTextField2.setText(timePause + "");
                 }
-                if (mins == 60) {
-                    hours += 1;
-                    mins = 0;
+                if (IS_PAUSING == false){
+                    tics++;
+                    if (tics == 100) {
+                        secs += 1;
+                        tics = 0;
+                    }
+                    if (secs == 60) {
+                        mins += 1;
+                        secs = 0;
+                    }
+                    if (mins == 60) {
+                        hours += 1;
+                        mins = 0;
+                    }
+                    txtTimes.setText(hours + " : " + mins + " : " + secs + " : " + tics);
+                    Thread.sleep(10);
                 }
-                txtTimes.setText(hours + " : " + mins + " : " + secs + " : " + tics);
-                Thread.sleep(10);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -369,7 +382,7 @@ public class Test extends javax.swing.JDialog implements Runnable {
         });
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        jLabel1.setText("Ảnh mẫu");
+        jLabel1.setText("Ảnh mẫu a");
 
         jLabel2.setText("Thời gian");
 
@@ -579,23 +592,26 @@ public class Test extends javax.swing.JDialog implements Runnable {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         try {
 
-            IS_PAUSING = !IS_PAUSING;
-            if (IS_PAUSING) {
-                jButton2.setText("Resume");
-            } else {
-                jButton2.setText("Pause");
-            }
-
-            while (IS_PAUSING && timePause > 0) {
-                MyTimer myTimer = new MyTimer(timePause);
-                myTimer.run();
-                jTextField2.setText(timePause + "");
-                if (timePause == 0) {
+            if (timePause > 0){
+                IS_PAUSING = !IS_PAUSING;
+                if (IS_PAUSING) {
+                    emitPause();
+                    jButton2.setText("Resume");
+                } else {
                     jButton2.setText("Pause");
-                    CAN_PAUSE = false;
-                    jButton2.setEnabled(false);
                 }
             }
+
+//            while (IS_PAUSING && timePause > 0) {
+//                MyTimer myTimer = new MyTimer(timePause);
+//                myTimer.run();
+//                jTextField2.setText(timePause + "");
+//                if (timePause == 0) {
+//                    jButton2.setText("Pause");
+//                    CAN_PAUSE = false;
+//                    jButton2.setEnabled(false);
+//                }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
