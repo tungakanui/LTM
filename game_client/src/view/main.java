@@ -28,6 +28,7 @@ public class main {
     public static boolean login = false;
     public static int my_ID;
     public static int my_EnemyID;
+    public static ArrayList<Integer> opponents = new ArrayList<>(); 
     public static ImageIcon icon = null;
     public static String full_name = null;
     public static boolean connected = false;
