@@ -33,18 +33,20 @@ import model.Relationship;
 import model.Server;
 import model.User;
 
+public class Server_controller extends Thread {
 
-public class Server_controller extends Thread{
     private Socket socket = null;
     private int ID;
     private int int_status;
     ObjectInputStream in = null;
     ObjectOutputStream out = null;
     ArrayList<Friend> arr_fr = new ArrayList<>();
+    ArrayList<String> opponents = new ArrayList<String>();
     Boolean is_running = true;
     private UserDAO userDAO = new UserDAO();
     private RelaDAO relaDAO = new RelaDAO();
-    public Server_controller(Socket socket){
+
+    public Server_controller(Socket socket) {
         this.socket = socket;
         try {
             this.out = new ObjectOutputStream(this.socket.getOutputStream());
@@ -52,47 +54,81 @@ public class Server_controller extends Thread{
             Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
     @Override
-    public void run(){
+    public void run() {
         Data_socket msg = null;
 //        try {
-            while(is_running){
+        while (is_running) {
             try {
-                in  = new ObjectInputStream(this.socket.getInputStream());
-                msg = (Data_socket)in.readObject(); // ép về dtsk
+                in = new ObjectInputStream(this.socket.getInputStream());
+                msg = (Data_socket) in.readObject(); // ép về dtsk
                 System.out.println(msg.action);
-                switch(msg.action){
-                    case "login":             this.login(msg.data[0],msg.data[1]);break; // this.login(msg)
-                    case "logout":            this.user_disconnect(Integer.parseInt(msg.data[0])); break;
-                    case "loadonline":        this.loadOnline(); break;
-                    case "reg":               this.reg(msg.data[0], msg.data[1], msg.data[2]); break;
-                    case "challenge":         this.challenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[2]), msg.data[1]);break;
-                    case "repchallenge":      this.repChallenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), msg.data[2], msg.data[3]);break;
-                    case "emitLost":          this.onLost(Integer.parseInt(msg.data[0]),Integer.parseInt(msg.data[1]), Double.parseDouble(msg.data[2]));break;
-                    case "emitWin":           this.onSubmit(msg);break;
-                    case "emitPause":         this.submitPause(msg);break;
-                    case "emitResume":        this.submitResume(msg);break;
-                    case "emitMultiChallenge": this.multiChallenge(Integer.parseInt(msg.data[0]), msg.data[1]);
-                    case "daw":               this.onDaw(msg);break;
-                    case "updateranktable":   this.updateRankTable(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]));break;
-                    case "onwin"          :   this.onWin(msg);break;
-                    case "onlosechallenge":   this.onLoseChallenge(msg);break;
-                    case "repMultiChallenge": this.repMultiChallenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), msg.data[2], msg.data[3]);break;
-                    case "onPause": this.onPause(Integer.parseInt(msg.data[0]), msg.data[2]); break;
-                    case "onResume": this.onResume(Integer.parseInt(msg.data[0]), msg.data[2]); break;
-                    default: System.out.println("unknow action");
+                switch (msg.action) {
+                    case "login":
+                        this.login(msg.data[0], msg.data[1]);
+                        break; // this.login(msg)
+                    case "logout":
+                        this.user_disconnect(Integer.parseInt(msg.data[0]));
+                        break;
+                    case "loadonline":
+                        this.loadOnline();
+                        break;
+                    case "reg":
+                        this.reg(msg.data[0], msg.data[1], msg.data[2]);
+                        break;
+                    case "challenge":
+                        this.challenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[2]), msg.data[1]);
+                        break;
+                    case "repchallenge":
+                        this.repChallenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), msg.data[2], msg.data[3]);
+                        break;
+                    case "emitLost":
+                        this.onLost(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), Double.parseDouble(msg.data[2]));
+                        break;
+                    case "emitWin":
+                        this.onSubmit(msg);
+                        break;
+                    case "emitPause":
+                        this.submitPause(msg);
+                        break;
+                    case "emitResume":
+                        this.submitResume(msg);
+                        break;
+                    case "emitMultiChallenge":
+                        this.multiChallenge(Integer.parseInt(msg.data[0]), msg.data[1]);
+                    case "daw":
+                        this.onDaw(msg);
+                        break;
+                    case "updateranktable":
+                        this.updateRankTable(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]));
+                        break;
+                    case "onwin":
+                        this.onWin(msg);
+                        break;
+                    case "onlosechallenge":
+                        this.onLoseChallenge(msg);
+                        break;
+                    case "repMultiChallenge":
+                        this.challenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[2]), msg.data[1]);
+                        break;
+                    case "onPause":
+                        this.onPause(Integer.parseInt(msg.data[0]), msg.data[2]);
+                        break;
+                    case "onResume":
+                        this.onResume(Integer.parseInt(msg.data[0]), msg.data[2]);
+                        break;
+                    default:
+                        System.out.println("unknow action");
                 }
             } catch (IOException | ClassNotFoundException ex) {
                 Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
             }
-            }
+        }
     }
-    
-    
-    
+
     //public void emitPause(int senderID, String fullName)
-    
-    public void onResume(int senderID, String fullName){
+    public void onResume(int senderID, String fullName) {
         Data_socket dtsk = new Data_socket();
         String[] data = new String[2];
         dtsk.action = "onResume";
@@ -100,17 +136,17 @@ public class Server_controller extends Thread{
         data[1] = fullName;
         dtsk.data = data;
         for (int i = 0; i < Server.arr_client.size(); i++) {
-                try {
-                    Server.arr_client.get(i).dout.writeObject(dtsk);
-                    Server.arr_client.get(i).dout.flush();
-                    return;
-                } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            try {
+                Server.arr_client.get(i).dout.writeObject(dtsk);
+                Server.arr_client.get(i).dout.flush();
+                return;
+            } catch (IOException ex) {
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-   }
- 
-   public void onPause(int senderID, String fullName){
+    }
+
+    public void onPause(int senderID, String fullName) {
         Data_socket dtsk = new Data_socket();
         String[] data = new String[2];
         dtsk.action = "onPause";
@@ -118,17 +154,17 @@ public class Server_controller extends Thread{
         data[1] = fullName;
         dtsk.data = data;
         for (int i = 0; i < Server.arr_client.size(); i++) {
-                try {
-                    Server.arr_client.get(i).dout.writeObject(dtsk);
-                    Server.arr_client.get(i).dout.flush();
-                    return;
-                } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                }
+            try {
+                Server.arr_client.get(i).dout.writeObject(dtsk);
+                Server.arr_client.get(i).dout.flush();
+                return;
+            } catch (IOException ex) {
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-   }
+    }
 
-    public void loadOnline(){
+    public void loadOnline() {
         Data_socket dtsk = new Data_socket();
         dtsk.action = "loadonline";
         dtsk.listOnline = new ArrayList<>();
@@ -140,29 +176,10 @@ public class Server_controller extends Thread{
             } catch (IOException ex) {
                 Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } 
-    }
-    
-    public void multiChallenge(int senderId, String fullName){
-        Data_socket dtsk = new Data_socket();
-        String[] data = new String[2];
-        dtsk.action = "mutiChallenge";
-        data[0] = senderId + "";
-        data[1] = fullName;
-        dtsk.data = data;
-        System.out.println(Server.arr_client.size() + "");
-        for (int i = 0; i < Server.arr_client.size(); i++) {
-                try {
-                    Server.arr_client.get(i).dout.writeObject(dtsk);
-                    Server.arr_client.get(i).dout.flush();
-                    System.out.println("Thach dau thanh cong");;
-                    return;
-                } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                }
         }
     }
-    public void challenge(int senderID, int receiverID, String fullName){
+
+    public void multiChallenge(int senderID, String fullName){
         Data_socket dtsk = new Data_socket();
         String[] data = new String[2];
         dtsk.action = "challenge";
@@ -170,7 +187,28 @@ public class Server_controller extends Thread{
         data[1] = fullName;
         dtsk.data = data;
         for (int i = 0; i < Server.arr_client.size(); i++) {
-            if(Server.arr_client.get(i).ID == receiverID){
+
+                try {
+                    Server.arr_client.get(i).dout.writeObject(dtsk);
+                    Server.arr_client.get(i).dout.flush();
+                    return;
+                } catch (IOException ex) {
+                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        
+    }
+    
+
+    public void challenge(int senderID, int receiverID, String fullName) {
+        Data_socket dtsk = new Data_socket();
+        String[] data = new String[2];
+        dtsk.action = "challenge";
+        data[0] = senderID + "";
+        data[1] = fullName;
+        dtsk.data = data;
+        for (int i = 0; i < Server.arr_client.size(); i++) {
+            if (Server.arr_client.get(i).ID == receiverID) {
                 try {
                     Server.arr_client.get(i).dout.writeObject(dtsk);
                     Server.arr_client.get(i).dout.flush();
@@ -181,116 +219,44 @@ public class Server_controller extends Thread{
             }
         }
     }
-    public void repMultiChallenge(int senderID, int receiverID, String fullName, String decision){
-         if (decision.equals("yes")){
-             // Check relationship
-            ArrayList<Relationship> listRela = new ArrayList<>();
-            listRela.addAll(relaDAO.getAllRela()); // load ra list quan hệ
-            int checkRela = 1;
-            for (Relationship r : listRela) {
-                if((senderID == r.getId1() && receiverID == r.getId2()) || (senderID == r.getId2() && receiverID == r.getId1())){
-                    checkRela = 0;
-                    break;
-                }
-            }
-            if(checkRela != 0){
-                relaDAO.addRela(new Relationship(senderID, receiverID)); // thêm quan hệ vào csdl
-            }
-            // handle invite
-//            for(int i = 0; i <  Server.listOnline.size(); i++){ // set trạng thái cho 2 thằng thành bận
-//                User u = Server.listOnline.get(i);
-//                int id = u.getID();
-//                if( id == receiverID){
-//                    Server.listOnline.get(i).setIsOnline(3); // bận
-//                }
-//            }
-            Data_socket dtsk = new Data_socket();
-            String [] data = new String[5];
-            data[0] = fullName;
-            data[1] = "yes";
-            data[2] = senderID + "";
-            data[3] = receiverID + "";
-            int image_ID = (int) Math.round(Math.random()*10);
-            data[4] = image_ID + ""; // đề bài
-            dtsk.data = data;
-            for (int i = 0; i < Server.arr_client.size(); i++){
-                if(Server.arr_client.get(i).ID == senderID){
-                    try {
-                        dtsk.action = "repMultiChallenge";
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
-                    } catch (IOException ex) {
-                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                else{
-//                    dtsk.action = "updatetobusy";
-//                    try {
-//                        Server.arr_client.get(i).dout.writeObject(dtsk);
-//                        Server.arr_client.get(i).dout.flush();
-//                    } catch (IOException ex) {
-//                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-                    
-                }
-            }
-         }else{
-            Data_socket dtsk = new Data_socket();
-            String [] data = new String[2];
-            data[0] = fullName;
-            data[1] = "no";
-            dtsk.data = data;
-            dtsk.action = "repMultiChallenge";
-            for (int i = 0; i < Server.arr_client.size(); i++) {
-                if(Server.arr_client.get(i).ID == senderID){
-                    try {
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
-                        return;
-                    } catch (IOException ex) {
-                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        }
-    }
-    
-    public void repChallenge(int senderID, int receiverID, String fullName, String decision){
 
-        if(decision.equals("yes")){ // đồng ý chơi
+
+    public void repChallenge(int senderID, int receiverID, String fullName, String decision) {
+
+        if (decision.equals("yes")) { // đồng ý chơi
             // Check relationship
             ArrayList<Relationship> listRela = new ArrayList<>();
             listRela.addAll(relaDAO.getAllRela()); // load ra list quan hệ
             int checkRela = 1;
             for (Relationship r : listRela) {
-                if((senderID == r.getId1() && receiverID == r.getId2()) || (senderID == r.getId2() && receiverID == r.getId1())){
+                if ((senderID == r.getId1() && receiverID == r.getId2()) || (senderID == r.getId2() && receiverID == r.getId1())) {
                     checkRela = 0;
                     break;
                 }
             }
-            if(checkRela != 0){
+            if (checkRela != 0) {
                 relaDAO.addRela(new Relationship(senderID, receiverID)); // thêm quan hệ vào csdl
             }
-            
+
             // handle invite
-            for(int i = 0; i <  Server.listOnline.size(); i++){ // set trạng thái cho 2 thằng thành bận
+            for (int i = 0; i < Server.listOnline.size(); i++) { // set trạng thái cho 2 thằng thành bận
                 User u = Server.listOnline.get(i);
                 int id = u.getID();
-                if(id == senderID || id == receiverID){
+                if (id == senderID || id == receiverID) {
                     Server.listOnline.get(i).setIsOnline(3); // bận
                 }
             }
             Data_socket dtsk = new Data_socket();
-            String [] data = new String[5];
+            String[] data = new String[5];
             data[0] = fullName;
             data[1] = "yes";
             data[2] = senderID + "";
             data[3] = receiverID + "";
-            int image_ID = (int) Math.round(Math.random()*10);
+            int image_ID = (int) Math.round(Math.random() * 10);
             data[4] = image_ID + ""; // đề bài
             dtsk.data = data;
             for (int i = 0; i < Server.arr_client.size(); i++) {
-                if(Server.arr_client.get(i).ID == senderID || Server.arr_client.get(i).ID == receiverID){
+                if (Server.arr_client.get(i).ID == senderID || Server.arr_client.get(i).ID == receiverID) {
                     try {
                         dtsk.action = "repchallenge";
                         Server.arr_client.get(i).dout.writeObject(dtsk);
@@ -298,8 +264,7 @@ public class Server_controller extends Thread{
                     } catch (IOException ex) {
                         Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                }
-                else{
+                } else {
                     dtsk.action = "updatetobusy";
                     try {
                         Server.arr_client.get(i).dout.writeObject(dtsk);
@@ -307,18 +272,18 @@ public class Server_controller extends Thread{
                     } catch (IOException ex) {
                         Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    
+
                 }
             }
-        }else{
+        } else {
             Data_socket dtsk = new Data_socket();
-            String [] data = new String[2];
+            String[] data = new String[2];
             data[0] = fullName;
             data[1] = "no";
             dtsk.data = data;
             dtsk.action = "repchallenge";
             for (int i = 0; i < Server.arr_client.size(); i++) {
-                if(Server.arr_client.get(i).ID == senderID){
+                if (Server.arr_client.get(i).ID == senderID) {
                     try {
                         Server.arr_client.get(i).dout.writeObject(dtsk);
                         Server.arr_client.get(i).dout.flush();
@@ -330,18 +295,20 @@ public class Server_controller extends Thread{
             }
         }
     }
-    public void updateToOnline (int id1, int id2){
-        for(int i = 0; i <  Server.listOnline.size(); i++){
+
+    public void updateToOnline(int id1, int id2) {
+        for (int i = 0; i < Server.listOnline.size(); i++) {
             User u = Server.listOnline.get(i);
             int id = u.getID();
-            if(id == id1 || id == id2){
+            if (id == id1 || id == id2) {
                 Server.listOnline.get(i).setIsOnline(1);
                 System.out.println(Server.listOnline.get(i).getIsOnline());
             }
         }
     }
-    public void onDaw(Data_socket dtsk){
-        int idEnemy = Integer.parseInt(dtsk.data[1]);
+
+    public void onDaw(Data_socket dtsk) {
+        int idEnemy = Integer.parseInt(dtsk.data[0]);
         int idMe = Integer.parseInt(dtsk.data[0]);
         double totalTime = Double.parseDouble(dtsk.data[3]);
         try {
@@ -351,7 +318,7 @@ public class Server_controller extends Thread{
             e.printStackTrace();
         }
         for (int i = 0; i < Server.arr_client.size(); i++) {
-            if(Server.arr_client.get(i).ID == idEnemy){
+            if (Server.arr_client.get(i).ID == idEnemy) {
                 try {
                     Data_socket dtsk1 = new Data_socket();
                     dtsk1.action = "ondaw";
@@ -368,8 +335,8 @@ public class Server_controller extends Thread{
             }
         }
     }
-    
-    public void onWin(Data_socket dtsk){   
+
+    public void onWin(Data_socket dtsk) {
         int idMe = Integer.parseInt(dtsk.data[0]);
         int idEnemy = Integer.parseInt(dtsk.data[1]);
         // core, time , game. wins
@@ -381,7 +348,7 @@ public class Server_controller extends Thread{
             e.printStackTrace();
         }
         for (int i = 0; i < Server.arr_client.size(); i++) {
-            if(Server.arr_client.get(i).ID == idEnemy){
+            if (Server.arr_client.get(i).ID == idEnemy) {
                 try {
                     Data_socket dtsk1 = new Data_socket();
                     dtsk1.action = "onwin";
@@ -398,8 +365,8 @@ public class Server_controller extends Thread{
             }
         }
     }
-    
-    public void onLoseChallenge(Data_socket dtsk){   
+
+    public void onLoseChallenge(Data_socket dtsk) {
         int idMe = Integer.parseInt(dtsk.data[0]);
         int idEnemy = Integer.parseInt(dtsk.data[1]);
         // core, time , game. wins
@@ -411,11 +378,11 @@ public class Server_controller extends Thread{
             e.printStackTrace();
         }
         for (int i = 0; i < Server.arr_client.size(); i++) {
-            if(Server.arr_client.get(i).ID == idEnemy){
+            if (Server.arr_client.get(i).ID == idEnemy) {
                 try {
                     Data_socket dtsk1 = new Data_socket();
                     dtsk1.action = "onlosechallenge";
-                    
+
                     dtsk1.data = dtsk.data;
                     Server.arr_client.get(i).dout.writeObject(dtsk);
                     Server.arr_client.get(i).dout.flush();
@@ -426,68 +393,68 @@ public class Server_controller extends Thread{
             }
         }
     }
-    
-    public void submitPause(Data_socket dtsk){
+
+    public void submitPause(Data_socket dtsk) {
         System.out.println("Submit Pause");
         int idMe = Integer.parseInt(dtsk.data[0]);
         for (int i = 0; i < Server.listOnline.size(); i++) {
             try {
-                if(Server.listOnline.get(i).getID() != idMe){
-                        
-                        dtsk.action = "opponentPause";
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
+                if (Server.listOnline.get(i).getID() != idMe) {
+
+                    dtsk.action = "opponentPause";
+                    Server.arr_client.get(i).dout.writeObject(dtsk);
+                    Server.arr_client.get(i).dout.flush();
                 }
             } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-            } 
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
-    
-    public void submitResume(Data_socket dtsk){
+
+    public void submitResume(Data_socket dtsk) {
         System.out.println("Submit Resume");
         int idMe = Integer.parseInt(dtsk.data[0]);
         for (int i = 0; i < Server.listOnline.size(); i++) {
             try {
-                if(Server.listOnline.get(i).getID() != idMe){
-                        
-                        dtsk.action = "opponentResume";
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
+                if (Server.listOnline.get(i).getID() != idMe) {
+
+                    dtsk.action = "opponentResume";
+                    Server.arr_client.get(i).dout.writeObject(dtsk);
+                    Server.arr_client.get(i).dout.flush();
                 }
             } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-            } 
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
-    
-    public void onSubmit(Data_socket dtsk){
+
+    public void onSubmit(Data_socket dtsk) {
         int idMe = Integer.parseInt(dtsk.data[0]);
         int idEnemy = Integer.parseInt(dtsk.data[1]);
-       
+
         updateToOnline(idMe, idEnemy);
-        
+
         Data_socket dtsk1 = new Data_socket();
         dtsk1.data = dtsk.data;
         for (int i = 0; i < Server.listOnline.size(); i++) {
-           try {   
-                if(Server.listOnline.get(i).getID() == idEnemy){
-                        
-                        dtsk.action = "enemysubmit";
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
-                }
-                else{
+            try {
+                if (Server.listOnline.get(i).getID() == idEnemy) {
+
+                    dtsk.action = "enemysubmit";
+                    Server.arr_client.get(i).dout.writeObject(dtsk);
+                    Server.arr_client.get(i).dout.flush();
+                } else {
                     dtsk.action = "updatetoonline";
                     Server.arr_client.get(i).dout.writeObject(dtsk);
                     Server.arr_client.get(i).dout.flush();
                 }
             } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-            } 
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
-    public void onLost(int idMe, int idEnemy, double totalTime){
+
+    public void onLost(int idMe, int idEnemy, double totalTime) {
         updateToOnline(idMe, idEnemy);
         // core, time , game. wins
         try {
@@ -496,13 +463,12 @@ public class Server_controller extends Thread{
         } catch (SQLException e) {
             e.printStackTrace();
         }
-      
-        
-        String[] data = new String [3];
+
+        String[] data = new String[3];
         data[0] = idMe + "";
         data[1] = idEnemy + "";
         for (int i = 0; i < Server.listOnline.size(); i++) {
-            if(Server.listOnline.get(i).getID() == idMe){
+            if (Server.listOnline.get(i).getID() == idMe) {
                 data[2] = Server.listOnline.get(i).getFullname();
                 break;
             }
@@ -510,24 +476,24 @@ public class Server_controller extends Thread{
         Data_socket dtsk = new Data_socket();
         dtsk.data = data;
         for (int i = 0; i < Server.listOnline.size(); i++) {
-           try {   
-                if(Server.listOnline.get(i).getID() == idEnemy){
-                        
-                        dtsk.action = "youwin";                    
-                        Server.arr_client.get(i).dout.writeObject(dtsk);
-                        Server.arr_client.get(i).dout.flush();
-                }
-                else{
+            try {
+                if (Server.listOnline.get(i).getID() == idEnemy) {
+
+                    dtsk.action = "youwin";
+                    Server.arr_client.get(i).dout.writeObject(dtsk);
+                    Server.arr_client.get(i).dout.flush();
+                } else {
                     dtsk.action = "updatetoonline";
                     Server.arr_client.get(i).dout.writeObject(dtsk);
                     Server.arr_client.get(i).dout.flush();
                 }
             } catch (IOException ex) {
-                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
-                } 
+                Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
-    public User createUser(ResultSet rs, User u) throws SQLException{
+
+    public User createUser(ResultSet rs, User u) throws SQLException {
         u.setID(rs.getInt("ID"));
         u.setUser_name(rs.getString("user_name"));
         u.setPass(rs.getString("pass"));
@@ -540,53 +506,55 @@ public class Server_controller extends Thread{
         u.setIsOnline(1);
         return u;
     }
-    
-    public boolean isOnline(User user){
-        for( User u : Server.listOnline){
-            if(u.getUser_name().equals(user.getUser_name())) {
+
+    public boolean isOnline(User user) {
+        for (User u : Server.listOnline) {
+            if (u.getUser_name().equals(user.getUser_name())) {
                 return true;
             }
         }
         return false;
     }
-    public ArrayList<User> getListEnemyOrderByAV (ArrayList<User> list){
-        Collections.sort(list, new Comparator<User>(){
+
+    public ArrayList<User> getListEnemyOrderByAV(ArrayList<User> list) {
+        Collections.sort(list, new Comparator<User>() {
             @Override
-            public int compare (User u1 , User u2){
-                double avCore1 = u1.getTotalCore()/(double)u1.getTotalGames();
-                double avCore2 = u2.getTotalCore()/(double)u2.getTotalGames();
+            public int compare(User u1, User u2) {
+                double avCore1 = u1.getTotalCore() / (double) u1.getTotalGames();
+                double avCore2 = u2.getTotalCore() / (double) u2.getTotalGames();
                 int rs;
-                if(avCore2 > avCore1){
+                if (avCore2 > avCore1) {
                     return 1;
-                }
-                else if(avCore2 < avCore1){
+                } else if (avCore2 < avCore1) {
                     return -1;
+                } else {
+                    return 0;
                 }
-                else return 0;
             }
         });
         return list;
     }
-    public void updateRankTable(int indexSeclected, int clientID){
+
+    public void updateRankTable(int indexSeclected, int clientID) {
         Data_socket dtsk = new Data_socket();
         String[] data = new String[1];
         data[0] = indexSeclected + "";
         dtsk.data = data;
         dtsk.rankList = new ArrayList<>();
         dtsk.action = "updateranktable";
-        switch(indexSeclected) {
+        switch (indexSeclected) {
             case 0: {
                 try {
                     dtsk.rankList.addAll(userDAO.getListUserOrderByCore());
                     for (int i = 0; i < Server.arr_client.size(); i++) {
-                        if(Server.arr_client.get(i).ID == clientID){   
+                        if (Server.arr_client.get(i).ID == clientID) {
                             Server.arr_client.get(i).dout.writeObject(dtsk);
                             Server.arr_client.get(i).dout.flush();
                             break;
                         }
                     }
                     break;
-                } catch ( IOException | SQLException ex) {
+                } catch (IOException | SQLException ex) {
                     Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -594,14 +562,14 @@ public class Server_controller extends Thread{
                 try {
                     dtsk.rankList.addAll(userDAO.getListUserOrderByTime());
                     for (int i = 0; i < Server.arr_client.size(); i++) {
-                        if(Server.arr_client.get(i).ID == clientID){   
+                        if (Server.arr_client.get(i).ID == clientID) {
                             Server.arr_client.get(i).dout.writeObject(dtsk);
                             Server.arr_client.get(i).dout.flush();
                             break;
                         }
                     }
                     break;
-                } catch ( IOException | SQLException ex) {
+                } catch (IOException | SQLException ex) {
                     Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -610,28 +578,29 @@ public class Server_controller extends Thread{
                     ArrayList<User> listEnemy = new ArrayList<>();
                     ArrayList<Relationship> listRela = new ArrayList<>();
                     listRela.addAll(relaDAO.getAllRelaById(clientID));
-                    for( Relationship r : listRela){
-                        int id = (r.getId1() == clientID)? r.getId2(): r.getId1();
+                    for (Relationship r : listRela) {
+                        int id = (r.getId1() == clientID) ? r.getId2() : r.getId1();
                         listEnemy.add(userDAO.getUserById(id));
                     }
                     dtsk.rankList.addAll(getListEnemyOrderByAV(listEnemy));
                     for (int i = 0; i < Server.arr_client.size(); i++) {
-                        if(Server.arr_client.get(i).ID == clientID){   
+                        if (Server.arr_client.get(i).ID == clientID) {
                             Server.arr_client.get(i).dout.writeObject(dtsk);
                             Server.arr_client.get(i).dout.flush();
                             break;
                         }
-                     }
+                    }
                     break;
                 } catch (IOException | SQLException ex) {
                     Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            default: break;
+            default:
+                break;
         }
     }
-    
-    public boolean login(String name,String pass){
+
+    public boolean login(String name, String pass) {
         String query = "SELECT * FROM `info_user` WHERE `user_name`= ? AND `pass` = ?";
         ResultSet result = null;
         String[] data = new String[3];
@@ -643,26 +612,26 @@ public class Server_controller extends Thread{
             result = prepstmt.executeQuery();
             result.last();
             dtsk.action = "login";
-            if(result.getRow() != 0){
+            if (result.getRow() != 0) {
                 User user = createUser(result, new User());
-                if(!isOnline(user)){
+                if (!isOnline(user)) {
                     data[0] = "true";
-                    data[1] = user.getID() +"";
-                    data[2] = user.getTotalCore()+"";
+                    data[1] = user.getID() + "";
+                    data[2] = user.getTotalCore() + "";
                     Server.listOnline.add(user);
                     System.out.println(Server.listOnline);
                     System.out.println(user.getID());
                     BufferedImage img = null;
                     String avt = user.getID() + "";
                     try {
-                        File file = new File("src/image/user"+avt+".jpg");
+                        File file = new File("src/image/user" + avt + ".jpg");
                         img = ImageIO.read(file);
                     } catch (IOException e) {
-                       File file = new File("src/image/avt.jpg");
+                        File file = new File("src/image/avt.jpg");
                         img = ImageIO.read(file);
                     }
                     ImageIcon icon = new ImageIcon(new ImageIcon(img).getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT));
-                    Friend me = new Friend(result.getInt("ID"), result.getString("fullname"),1,icon,result.getString("status"));
+                    Friend me = new Friend(result.getInt("ID"), result.getString("fullname"), 1, icon, result.getString("status"));
                     ArrayList<Friend> ar = new ArrayList<>();
                     ar.add(me);
                     dtsk.list_fr = ar;
@@ -673,14 +642,14 @@ public class Server_controller extends Thread{
                     this.ID = user.getID();
                     this.int_status = 1;
 
-                    append_txt("client: "+this.socket.getPort()+ " Login");
-                }else{
-                    append_txt("client: "+this.socket.getPort()+" is Online, cant connect!");
+                    append_txt("client: " + this.socket.getPort() + " Login");
+                } else {
+                    append_txt("client: " + this.socket.getPort() + " is Online, cant connect!");
                     data[0] = "online";
                 }
-            }else{
-                append_txt("client: "+this.socket.getPort()+" try to login");
-                data[0] = "false";  
+            } else {
+                append_txt("client: " + this.socket.getPort() + " try to login");
+                data[0] = "false";
             }
             dtsk.data = data;
             dtsk.rankList = new ArrayList<>();
@@ -693,7 +662,8 @@ public class Server_controller extends Thread{
         }
         return false;
     }
-    public void reg(String username,String full_name,String pass){
+
+    public void reg(String username, String full_name, String pass) {
         String[] data = new String[1];
         Data_socket dtsk = new Data_socket();
         dtsk.action = "reg";
@@ -705,7 +675,7 @@ public class Server_controller extends Thread{
             System.out.println(preparedStatement1.toString());
             ResultSet rs = preparedStatement1.executeQuery();
             rs.last();
-            if(rs.getRow() != 0){
+            if (rs.getRow() != 0) {
                 //user_name exist;
                 data[0] = "false";
                 dtsk.data = data;
@@ -719,13 +689,14 @@ public class Server_controller extends Thread{
             preparedStatement2.executeUpdate();
             data[0] = "true";
             dtsk.data = data;
-            
+
             out.writeObject(dtsk);
         } catch (SQLException | IOException ex) {
             Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    public void user_login(int ID){
+
+    public void user_login(int ID) {
         int size = Server.arr_client.size();
         this.int_status = 1; // 1 = online
         Client cl = new Client(socket, ID);
@@ -733,10 +704,11 @@ public class Server_controller extends Thread{
         cl.int_status = 1;
         Server.arr_client.add(cl);
     }
-    public void user_disconnect(int ID){
+
+    public void user_disconnect(int ID) {
         Data_socket dtsk = new Data_socket();
-        for(int i = 0; i< Server.arr_client.size();i++){
-            if(Server.arr_client.get(i).ID == ID){
+        for (int i = 0; i < Server.arr_client.size(); i++) {
+            if (Server.arr_client.get(i).ID == ID) {
                 Server.arr_client.remove(i); // remove form online list
                 Server.listOnline.remove(i);
                 dtsk.listOnline = new ArrayList<>();
@@ -745,7 +717,7 @@ public class Server_controller extends Thread{
                 break;
             }
         }
-         for (int i = 0; i < Server.arr_client.size(); i++) {
+        for (int i = 0; i < Server.arr_client.size(); i++) {
             try {
                 Server.arr_client.get(i).dout.writeObject(dtsk);
                 Server.arr_client.get(i).dout.flush();
@@ -755,9 +727,10 @@ public class Server_controller extends Thread{
         }
         this.is_running = false; // terminal thread
     }
-    public void append_txt(String msg){
-        fr_server.txt_log.append(msg+"\n");
+
+    public void append_txt(String msg) {
+        fr_server.txt_log.append(msg + "\n");
         fr_server.txt_log.setCaretPosition(fr_server.txt_log.getDocument().getLength());
     }
-   
+
 }
