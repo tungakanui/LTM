@@ -492,7 +492,7 @@ public class fr_play extends javax.swing.JFrame
         switch(confirm){
             case JOptionPane.YES_OPTION:{
                 IS_RUN = false;
-                JOptionPane.showMessageDialog(this, "Thua ở " + hours + " : " + mins +" : " + secs + " : " + tics +" ! Nhục vkl!");
+                JOptionPane.showMessageDialog(this, "Thua ở " + hours + " : " + mins +" : " + secs + " : " + tics +" !");
                 this.dispose();
 //                this.puzzle.dispose();
                 break;

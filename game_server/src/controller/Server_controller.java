@@ -70,11 +70,14 @@ public class Server_controller extends Thread{
                     case "repchallenge":      this.repChallenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), msg.data[2], msg.data[3]);break;
                     case "emitLost":          this.onLost(Integer.parseInt(msg.data[0]),Integer.parseInt(msg.data[1]), Double.parseDouble(msg.data[2]));break;
                     case "emitWin":           this.onSubmit(msg);break;
+                    case "emitPause":         this.submitPause(msg);break;
+                    case "emitResume":        this.submitResume(msg);break;
+                    case "emitMultiChallenge": this.multiChallenge(Integer.parseInt(msg.data[0]), msg.data[1]);
                     case "daw":               this.onDaw(msg);break;
                     case "updateranktable":   this.updateRankTable(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]));break;
                     case "onwin"          :   this.onWin(msg);break;
                     case "onlosechallenge":   this.onLoseChallenge(msg);break;
-                    case "multiChallenge": this.multiChallenge(Integer.parseInt(msg.data[0]),  msg.data[2]); break;
+                    case "repMultiChallenge": this.repMultiChallenge(Integer.parseInt(msg.data[0]), Integer.parseInt(msg.data[1]), msg.data[2], msg.data[3]);break;
                     case "onPause": this.onPause(Integer.parseInt(msg.data[0]), msg.data[2]); break;
                     case "onResume": this.onResume(Integer.parseInt(msg.data[0]), msg.data[2]); break;
                     default: System.out.println("unknow action");
@@ -84,6 +87,10 @@ public class Server_controller extends Thread{
             }
             }
     }
+    
+    
+    
+    //public void emitPause(int senderID, String fullName)
     
     public void onResume(int senderID, String fullName){
         Data_socket dtsk = new Data_socket();
@@ -139,14 +146,16 @@ public class Server_controller extends Thread{
     public void multiChallenge(int senderId, String fullName){
         Data_socket dtsk = new Data_socket();
         String[] data = new String[2];
-        dtsk.action = "multiChallenge";
+        dtsk.action = "mutiChallenge";
         data[0] = senderId + "";
         data[1] = fullName;
         dtsk.data = data;
+        System.out.println(Server.arr_client.size() + "");
         for (int i = 0; i < Server.arr_client.size(); i++) {
                 try {
                     Server.arr_client.get(i).dout.writeObject(dtsk);
                     Server.arr_client.get(i).dout.flush();
+                    System.out.println("Thach dau thanh cong");;
                     return;
                 } catch (IOException ex) {
                     Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
@@ -172,6 +181,80 @@ public class Server_controller extends Thread{
             }
         }
     }
+    public void repMultiChallenge(int senderID, int receiverID, String fullName, String decision){
+         if (decision.equals("yes")){
+             // Check relationship
+            ArrayList<Relationship> listRela = new ArrayList<>();
+            listRela.addAll(relaDAO.getAllRela()); // load ra list quan hệ
+            int checkRela = 1;
+            for (Relationship r : listRela) {
+                if((senderID == r.getId1() && receiverID == r.getId2()) || (senderID == r.getId2() && receiverID == r.getId1())){
+                    checkRela = 0;
+                    break;
+                }
+            }
+            if(checkRela != 0){
+                relaDAO.addRela(new Relationship(senderID, receiverID)); // thêm quan hệ vào csdl
+            }
+            // handle invite
+//            for(int i = 0; i <  Server.listOnline.size(); i++){ // set trạng thái cho 2 thằng thành bận
+//                User u = Server.listOnline.get(i);
+//                int id = u.getID();
+//                if( id == receiverID){
+//                    Server.listOnline.get(i).setIsOnline(3); // bận
+//                }
+//            }
+            Data_socket dtsk = new Data_socket();
+            String [] data = new String[5];
+            data[0] = fullName;
+            data[1] = "yes";
+            data[2] = senderID + "";
+            data[3] = receiverID + "";
+            int image_ID = (int) Math.round(Math.random()*10);
+            data[4] = image_ID + ""; // đề bài
+            dtsk.data = data;
+            for (int i = 0; i < Server.arr_client.size(); i++){
+                if(Server.arr_client.get(i).ID == senderID){
+                    try {
+                        dtsk.action = "repMultiChallenge";
+                        Server.arr_client.get(i).dout.writeObject(dtsk);
+                        Server.arr_client.get(i).dout.flush();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                else{
+//                    dtsk.action = "updatetobusy";
+//                    try {
+//                        Server.arr_client.get(i).dout.writeObject(dtsk);
+//                        Server.arr_client.get(i).dout.flush();
+//                    } catch (IOException ex) {
+//                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+                    
+                }
+            }
+         }else{
+            Data_socket dtsk = new Data_socket();
+            String [] data = new String[2];
+            data[0] = fullName;
+            data[1] = "no";
+            dtsk.data = data;
+            dtsk.action = "repMultiChallenge";
+            for (int i = 0; i < Server.arr_client.size(); i++) {
+                if(Server.arr_client.get(i).ID == senderID){
+                    try {
+                        Server.arr_client.get(i).dout.writeObject(dtsk);
+                        Server.arr_client.get(i).dout.flush();
+                        return;
+                    } catch (IOException ex) {
+                        Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+    }
+    
     public void repChallenge(int senderID, int receiverID, String fullName, String decision){
 
         if(decision.equals("yes")){ // đồng ý chơi
@@ -343,6 +426,41 @@ public class Server_controller extends Thread{
             }
         }
     }
+    
+    public void submitPause(Data_socket dtsk){
+        System.out.println("Submit Pause");
+        int idMe = Integer.parseInt(dtsk.data[0]);
+        for (int i = 0; i < Server.listOnline.size(); i++) {
+            try {
+                if(Server.listOnline.get(i).getID() != idMe){
+                        
+                        dtsk.action = "opponentPause";
+                        Server.arr_client.get(i).dout.writeObject(dtsk);
+                        Server.arr_client.get(i).dout.flush();
+                }
+            } catch (IOException ex) {
+                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            } 
+        }
+    }
+    
+    public void submitResume(Data_socket dtsk){
+        System.out.println("Submit Resume");
+        int idMe = Integer.parseInt(dtsk.data[0]);
+        for (int i = 0; i < Server.listOnline.size(); i++) {
+            try {
+                if(Server.listOnline.get(i).getID() != idMe){
+                        
+                        dtsk.action = "opponentResume";
+                        Server.arr_client.get(i).dout.writeObject(dtsk);
+                        Server.arr_client.get(i).dout.flush();
+                }
+            } catch (IOException ex) {
+                    Logger.getLogger(Server_controller.class.getName()).log(Level.SEVERE, null, ex);
+            } 
+        }
+    }
+    
     public void onSubmit(Data_socket dtsk){
         int idMe = Integer.parseInt(dtsk.data[0]);
         int idEnemy = Integer.parseInt(dtsk.data[1]);

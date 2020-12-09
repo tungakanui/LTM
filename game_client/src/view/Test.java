@@ -521,7 +521,8 @@ public class Test extends javax.swing.JDialog implements Runnable {
 
     private void emitPause() {
         Data_socket dtsk = new Data_socket();
-        dtsk.action = "onPause";
+        System.out.println("emitPause");
+        dtsk.action = "emitPause";
         String[] data = new String[3];
         data[0] = main.my_ID + "";
         data[1] = "";
@@ -538,7 +539,8 @@ public class Test extends javax.swing.JDialog implements Runnable {
 
     private void emitResume() {
         Data_socket dtsk = new Data_socket();
-        dtsk.action = "onResume";
+        System.out.println("emitResume");
+        dtsk.action = "emitResume";
         String[] data = new String[3];
         data[0] = main.my_ID + "";
         data[1] = "";
@@ -598,7 +600,9 @@ public class Test extends javax.swing.JDialog implements Runnable {
                     emitPause();
                     jButton2.setText("Resume");
                 } else {
+                    emitResume();
                     jButton2.setText("Pause");
+                    
                 }
             }
 

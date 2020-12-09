@@ -61,12 +61,15 @@ public class Client_controller  extends Thread{
                     case "updatetoonline"    : this.updateToOnline(respon);break;
                     case "youwin"            : this.onWin(respon);break;
                     case "enemysubmit"       : this.onSubmit(respon);break;
+                    case "opponentResume"    : this.onResume(respon);break;
+                    case "opponentPause"     : this.onPause(respon);break;
                     case "ondaw"             : this.onDaw(respon);break;
                     case "reg"               : this.respon_reg(respon);break;
                     case "onwin"             : this.enemyLose(respon);break;
                     case "onlosechallenge"   : this.enemyLoseAndChallenge(respon);break;
                     case "onPause"           : this.onPause(respon); break;
-//                    case "multiChallenge": this.multiChallenge();break;
+                    case "multiChallenge"    : this.multiChallenge(Integer.parseInt(respon.data[0]), respon.data[1]);break;
+                    case "repMultiChallenge" : this.repMultiChallenge(respon);break;
                     default                  : System.out.println("unknow action");
                 }
             }
@@ -77,6 +80,59 @@ public class Client_controller  extends Thread{
             System.exit(0);
         }
     } 
+    
+    public void multiChallenge(int senderID, String fullName){
+        // check lúc hòa , nếu xủ lý xong thì resset...
+        if(main.done){
+            main.done = false;
+        }
+        int confirm = JOptionPane.showConfirmDialog(null, "Người chơi "+ fullName + " có ID "+senderID+" thách đấu bạn! Đồng ý !?", "Thư thách đấu", JOptionPane.YES_NO_OPTION);
+         Data_socket dtsk = new Data_socket();
+         String[] data = new String[4];
+         data[0] = senderID + "";
+         data[1] = main.my_ID + "";
+         data[2] = main.full_name;
+         dtsk.action = "repMultiChallenge";
+         ObjectOutputStream dout;
+         switch(confirm){
+             case JOptionPane.YES_OPTION:{
+                 data[3] = "yes";
+                 dtsk.data = data;
+                try {
+                    dout = new ObjectOutputStream(main.socket.getOutputStream());
+                    dout.writeObject(dtsk);
+                    dout.flush();
+                } catch (IOException ex) {
+                    Logger.getLogger(Client_controller.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                 break;
+             }
+             case JOptionPane.NO_OPTION: {
+                 data[3] = "no";
+                 dtsk.data = data;
+                try {
+                    dout = new ObjectOutputStream(main.socket.getOutputStream());
+                    dout.writeObject(dtsk);
+                    dout.flush();
+                } catch (IOException ex) {
+                    Logger.getLogger(Client_controller.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                 break;
+             }
+             default:{
+                 data[3] = "no";
+                 dtsk.data = data;
+                try {
+                    dout = new ObjectOutputStream(main.socket.getOutputStream());
+                    dout.writeObject(dtsk);
+                    dout.flush();
+                } catch (IOException ex) {
+                    Logger.getLogger(Client_controller.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                 break;
+             }
+         }
+    }
     
     
     public void challenge(int senderID, String fullName){
@@ -158,6 +214,22 @@ public class Client_controller  extends Thread{
         loadOnline(main.listOnline);
     }
     
+    public void repMultiChallenge(Data_socket dtsk){
+        if(dtsk.data[1].equals("yes")){
+            updateToBusy(dtsk);
+            int myID = main.my_ID ;
+            int id1 = Integer.parseInt(dtsk.data[2]);
+            int id2 = Integer.parseInt(dtsk.data[3]);
+            main.my_EnemyID = (myID==id1)? id2 : id1;
+            
+            main.test = new Test(main.fr_client, false);
+            main.test.image_ID = dtsk.data[4]; // đề bài
+            main.test.setVisible(true);
+        }else{
+            JOptionPane.showMessageDialog(null, dtsk.data[0] + " từ chối lời mời của bạn!");
+        }
+    }
+    
     public void repChallenge(Data_socket dtsk){
         if(dtsk.data[1].equals("yes")){
             updateToBusy(dtsk);
@@ -175,27 +247,14 @@ public class Client_controller  extends Thread{
     }
     
     public void onPause(Data_socket dtsk){
-        if (dtsk.action.equals("onPause")){
             main.test.IS_PAUSING = true;
-        }
+            System.out.println("nhan duoc event Pause");
     }
     
     public void onResume(Data_socket dtsk){
-        main.done = false;
-        dtsk.action = "onResume";
-        String[] data = new String[3];
-        data[0] = main.my_ID + "";
-        data[1] = "";
-        data[2] = main.full_name;
         
-        dtsk.data = data;
-        try {
-            ObjectOutputStream dout = new ObjectOutputStream(main.socket.getOutputStream());
-            dout.writeObject(dtsk);
-            dout.flush();
-        } catch (Exception e){
-            e.printStackTrace();
-        }
+            main.test.IS_PAUSING = false;
+        System.out.println("nhan duoc event Resume");
     }
 
     

@@ -129,6 +129,7 @@ public class fr_client extends javax.swing.JFrame{
         jLabel3 = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
         lbl_MyTotalCore = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
 
         jMenuItem1.setText("jMenuItem1");
         jPopupMenu1.add(jMenuItem1);
@@ -194,6 +195,13 @@ public class fr_client extends javax.swing.JFrame{
         lbl_MyTotalCore.setForeground(new java.awt.Color(255, 51, 51));
         lbl_MyTotalCore.setText("ĐIỂM");
 
+        jButton1.setText("Chiến hết");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -230,6 +238,10 @@ public class fr_client extends javax.swing.JFrame{
                     .addComponent(jComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 232, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(25, 25, 25))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -245,7 +257,9 @@ public class fr_client extends javax.swing.JFrame{
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4)
                             .addComponent(lbl_MyTotalCore))))
-                .addGap(55, 55, 55)
+                .addGap(26, 26, 26)
+                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -339,6 +353,10 @@ public class fr_client extends javax.swing.JFrame{
             Logger.getLogger(fr_client.class.getName()).log(Level.SEVERE, null, ex);
         }
     }//GEN-LAST:event_jComboBox2ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        emitMultiChallenge();
+    }//GEN-LAST:event_jButton1ActionPerformed
 // 
 //    public void chat(int index){
 //        Friend fr = Chat_client.list_friend.get(index);
@@ -445,6 +463,21 @@ public class fr_client extends javax.swing.JFrame{
 //        Chat_client.list_fr_chat.add(chat);
 //    }
     
+   public void emitMultiChallenge(){
+       try {
+           Data_socket dtsk = new Data_socket();
+           dtsk.action = "emitMultiChallenge";
+           String[] data = new String[2];
+           data[0] = String.valueOf(main.my_ID);
+           data[1] = main.full_name;
+           dtsk.data = data;
+           dout = new ObjectOutputStream(main.socket.getOutputStream());
+           dout.writeObject(dtsk);
+       } catch (IOException ex) {
+            Logger.getLogger(fr_client.class.getName()).log(Level.SEVERE, null, ex);
+        }
+   } 
+    
    public void load_friend(int status){
         try {
             Data_socket dtsk = new Data_socket();
@@ -489,6 +522,7 @@ public class fr_client extends javax.swing.JFrame{
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
     private javax.swing.JComboBox<String> jComboBox2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
